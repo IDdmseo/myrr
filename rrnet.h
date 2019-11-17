@@ -54,7 +54,7 @@ int find_rr_tid(int rtid);
 extern int curr_seq;
 extern int curr_mode;
 extern int curr_rr_tid;
-extern int rr_tid[2]; // 0 for tid, 1 for sleep
+extern int rr_tid_info[2]; // 0 for tid, 1 for sleep
 extern struct list_head rr_log_head;
 extern struct list_head rr_tid_head;
 extern pthread_cond_t cond[10];
@@ -62,8 +62,10 @@ extern pthread_mutex_t sync_mutex;
 
 /* Implementation of linked-list data structure */
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
+
 #define LIST_HEAD(name) \
-struct list_head name = LIST_HEAD_INIT(name)
+	struct list_head name = LIST_HEAD_INIT(name)
+
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
         list->next = list;
@@ -139,5 +141,9 @@ static inline int list_empty(struct list_head *head)
         for (pos = list_first_entry(head, typeof(*pos), member);        \
                 &pos->member != (head); \
                 pos = list_next_entry(pos, member))
-
+#define list_for_each_entry_safe(pos, n, head, member)	\
+		for (pos = list_first_entry(head, typeof(*pos), member),	\
+			n = list_next_entry(pos, member);	\
+			&pos->memeber != (head);	\
+			pos = n, n = list_next_entry(n, member))
 #endif

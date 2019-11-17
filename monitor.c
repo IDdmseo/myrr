@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
 			}
 		}
 		fclose(fp_log);
-		/* remove rr_tid logs */
 		init_all_information(RR_MOD_DEFAULT);
 		
 	}
@@ -61,10 +60,12 @@ int main(int argc, char *argv[])
 				list_add_tail(&log->list, &rr_log_head);
 			}
 		}
+
 		fclose(fp_log); 
-		/* remove rr_tid logs */
 		init_all_information(RR_MOD_DEFAULT);
 	}
+
+/* remove all rr_tid_list */
 
 	return 0;
 }	

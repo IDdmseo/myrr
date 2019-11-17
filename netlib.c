@@ -39,23 +39,40 @@ retry:
 		log = rr_get_log(&rr_log_head);
 		int curr_rr_tid = find_rr_tid(pthread_self());
 		if (curr_rr_tid != log->rr_tid) {
-			pthread_mutex_lock(&sync_mutex);
-			pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
-			pthread_mutex_unlock(&sync_mutex);
-			goto retry;
+			if(rr_tid_info[1] == (rr_tid_info[0] - 1)) {
+				pthread_mutex_lock(&sync_mutex);
+				pthread_cond_signal(&cond[log->rr_tid]);
+				rr_tid_info[1] += 1;
+				pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+				rr_tid_info[1] -= 1;
+				pthread_mutex_unlock(&sync_mutex);
+				goto retry;
+			}
+			else {
+				pthread_mutex_lock(&sync_mutex);
+				rr_tid_info[1] += 1;
+				pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+				rr_tid_info[1] -= 1;
+				pthread_mutex_unlock(&sync_mutex);
+				goto retry;
+			}
 		}
 		else { 
 			if (curr_seq != log->io_seq || log->io_sort != SEND) {
-				if (rr_tid[1] == (rr_tid[0] - 1)) {
+				if (rr_tid_info[1] == (rr_tid_info[0] - 1)) {
 					pthread_mutex_lock(&sync_mutex);
 					pthread_cond_signal(&cond[log->rr_tid]);
+					rr_tid_info[1] += 1;
 					pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+					rr_tid_info[1] -= 1;
 					pthread_mutex_unlock(&sync_mutex);
 					goto retry;
 				}
 				else {
 					pthread_mutex_lock(&sync_mutex);
+					rr_tid_info[1] += 1;
 					pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+					rr_tid_info[1] -= 1;
 					pthread_mutex_unlock(&sync_mutex);
 					goto retry;
 				}
@@ -87,23 +104,39 @@ retry:
 		log = rr_get_log(&rr_log_head);
 		int curr_rr_tid = find_rr_tid(pthread_self());
 		if (curr_rr_tid != log->rr_tid) {
-			pthread_mutex_lock(&sync_mutex);
-			pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
-			pthread_mutex_unlock(&sync_mutex);
-			goto retry;
+			if (rr_tid_info[1] == (rr_tid_info[0] - 1)){
+				pthread_mutex_lock(&sync_mutex);
+				pthread_cond_signal(&cond[log->rr_tid]);
+				rr_tid_info[1] += 1;
+				pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+				rr_tid_info[1] -= 1;
+				pthread_mutex_unlock(&sync_mutex);
+				goto retry;
+			} else {
+				pthread_mutex_lock(&sync_mutex);
+				rr_tid_info[1] += 1;
+				pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+				rr_tid_info[1] -= 1;
+				pthread_mutex_unlock(&sync_mutex);
+				goto retry;
+			}
 		}
 		else {
 			if (curr_seq != log->io_seq || log->io_sort != RECV) {
-				if (rr_tid[1] == (rr_tid[0] - 1)){
+				if (rr_tid_info[1] == (rr_tid_info[0] - 1)){
 					pthread_mutex_lock(&sync_mutex);
 					pthread_cond_signal(&cond[log->rr_tid]);
+					rr_tid_info[1] += 1;
 					pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+					rr_tid_info[1] -= 1;
 					pthread_mutex_unlock(&sync_mutex);
 					goto retry;
 				}
 				else {
 					pthread_mutex_lock(&sync_mutex);
+					rr_tid_info[1] += 1;
 					pthread_cond_wait(&cond[curr_rr_tid], &sync_mutex);
+					rr_tid_info[1] -= 1;
 					pthread_mutex_unlock(&sync_mutex);
 					goto retry;
 				}
