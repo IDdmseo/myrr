@@ -40,7 +40,7 @@ struct rr_tid {
 	int rtid;
 	int tid;
 	struct list_head list;
-}
+};
 
 /* log file configuration */
 struct rr_log* rr_make_log(int type, char *data, int size, int sort, struct list_head *list);
@@ -53,11 +53,12 @@ int find_rr_tid(int rtid);
 /* global variables */
 extern int curr_seq;
 extern int curr_mode;
+extern int curr_rr_tid;
 extern int rr_tid[2]; // 0 for tid, 1 for sleep
 extern struct list_head rr_log_head;
 extern struct list_head rr_tid_head;
 extern pthread_cond_t cond[10];
-
+extern pthread_mutex_t sync_mutex;
 
 /* Implementation of linked-list data structure */
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
@@ -138,4 +139,5 @@ static inline int list_empty(struct list_head *head)
         for (pos = list_first_entry(head, typeof(*pos), member);        \
                 &pos->member != (head); \
                 pos = list_next_entry(pos, member))
+
 #endif

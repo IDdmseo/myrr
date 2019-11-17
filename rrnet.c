@@ -4,9 +4,11 @@
 #include <pthread.h>
 #include <string.h>
 #include <sys/types.h>
+#include "rrnet.h"
 
 int curr_seq;
 int curr_mode;
+int curr_rr_tid;
 int rr_tid[3]; // 0 for tid, 1 for sleep, 2 for total tid
 struct list_head rr_log_head;
 struct list_head rr_tid_head;
@@ -79,11 +81,11 @@ void init_all_information(int mode)
 
 int rr_tid_alloc(int tid)
 {
-	struct rr_tid *rr_tid;
-	rr_tid = (struct rr_tid *)malloc(sizeof(struct rr_tid));
-	rr_tid->rtid = pthread_self(); // real thread id in pthread library.
-	rr_tid->tid = rr_tid[0]; // alloc unique thread_id for rr.
-	list_add_tail(&rr_tid->list, &rr_tid_head);
+	struct rr_tid *get;
+	get = (struct rr_tid *)malloc(sizeof(struct rr_tid));
+	get->rtid = pthread_self(); // real thread id in pthread library.
+	get->tid = rr_tid[0]; // alloc unique thread_id for rr.
+	list_add_tail(&get->list, &rr_tid_head);
 
 	rr_tid[0] += 1;
 
@@ -93,10 +95,10 @@ int rr_tid_alloc(int tid)
 int find_rr_tid(int tid)
 {
 	struct rr_tid *get;
-	get = list_first_entry(&rr_tid_list, struct rr_tid, list);
+	get = list_first_entry(&rr_tid_head, struct rr_tid, list);
 
 	if (get != NULL) {
-		for (get; get->next != NULL; get=get->next) {
+		for (get; get->list.next != NULL; get=get->list.next) {
 			if(tid != get->rtid)
 				continue;
 			else	
