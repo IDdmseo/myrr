@@ -13,6 +13,9 @@ int rr_tid_info[2]; // 0 for tid and current total tid, 1 for sleep
 struct list_head rr_log_head;
 struct list_head rr_tid_head;
 
+LIST_HEAD(rr_log_head);
+LIST_HEAD(rr_tid_head);
+
 pthread_cond_t cond[10];
 pthread_mutex_t sync_mutex;
 
@@ -36,10 +39,10 @@ struct rr_log* rr_make_log(int type, char *data, int size, int sort, struct list
 	return log;
 }
 
-struct rr_log* rr_get_log(struct list_head *list)
+struct rr_log* rr_get_log(struct list_head *plist)
 {
-	if(!list_empty(list))
-		return list_first_entry(list, struct rr_log, list);
+	if(!list_empty(plist))
+		return list_first_entry(plist, struct rr_log, list);
 
 	else {
 		printf("there are no logs\n");
@@ -56,7 +59,7 @@ void rr_remove_log(struct list_head *list)
 		return;
 	}
 	
-	log = rr_get_log(&rr_log_head);
+	log = rr_get_log(&list);
 	list_del(list->next);
 	free(log->copy_data);
 	free(log);	
@@ -65,8 +68,9 @@ void rr_remove_log(struct list_head *list)
 void init_all_information(int mode)
 {	
 	int i = 0;
-	LIST_HEAD_INIT(rr_log_head);
-	LIST_HEAD_INIT(rr_tid_head);
+
+	INIT_LIST_HEAD(&rr_log_head);
+	INIT_LIST_HEAD(&rr_tid_head);
 	curr_seq = 0;
 	curr_mode = mode;
 
@@ -98,18 +102,15 @@ int rr_tid_alloc(int tid)
 int find_rr_tid(int tid)
 {
 	struct rr_tid *get;
-	get = list_first_entry(&rr_tid_head, struct rr_tid, list);
 
-/* modification need */
-	if (get != NULL) {
-		for (get; get->list.next != NULL; get=get->list.next) {
-			if(tid != get->rtid)
-				continue;
-			else	
-				return get->tid;
-		}
-	} else
-		return NULL;
+	list_for_each_entry(get, &rr_tid_head, list){
+		if(tid!=get->rtid)
+			continue;
+		else if(tid == get->rtid)
+			return get->tid;
+		else if(get == NULL);
+			return 0;
+	}
 }
 
 

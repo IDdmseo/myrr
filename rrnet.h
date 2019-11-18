@@ -2,6 +2,8 @@
 #define _RR_HEADER
 
 #define _GNU_SOURCE
+#ifndef _LINUX_LIST_H
+#define _LINUX_LIST_H
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -144,6 +146,7 @@ static inline int list_empty(struct list_head *head)
 #define list_for_each_entry_safe(pos, n, head, member)	\
 		for (pos = list_first_entry(head, typeof(*pos), member),	\
 			n = list_next_entry(pos, member);	\
-			&pos->memeber != (head);	\
+			&pos->member != (head);	\
 			pos = n, n = list_next_entry(n, member))
+#endif
 #endif

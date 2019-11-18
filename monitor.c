@@ -65,7 +65,17 @@ int main(int argc, char *argv[])
 		init_all_information(RR_MOD_DEFAULT);
 	}
 
-/* remove all rr_tid_list */
+	/* remove all rr_tid_list */
+	struct rr_tid *set, *next;
+
+	list_for_each_entry_safe(set, next, &rr_tid_head, list){
+		if (get == NULL)
+			break;
+		list_del(&get->list);
+		free(get);
+	}
+
+	free(&rr_tid_head);
 
 	return 0;
 }	
