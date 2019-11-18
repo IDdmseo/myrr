@@ -1,9 +1,4 @@
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <string.h>
-#include <sys/types.h>
 #include "rrnet.h"
 
 int curr_seq;
@@ -59,7 +54,7 @@ void rr_remove_log(struct list_head *list)
 		return;
 	}
 	
-	log = rr_get_log(&list);
+	log = rr_get_log(list);
 	list_del(list->next);
 	free(log->copy_data);
 	free(log);	
@@ -103,7 +98,7 @@ int find_rr_tid(int tid)
 {
 	struct rr_tid *get;
 
-	list_for_each_entry(get, &rr_tid_head, list){
+	list_for_each_entry(get, &rr_tid_head, list) {
 		if(tid!=get->rtid)
 			continue;
 		else if(tid == get->rtid)
@@ -112,5 +107,4 @@ int find_rr_tid(int tid)
 			return 0;
 	}
 }
-
 

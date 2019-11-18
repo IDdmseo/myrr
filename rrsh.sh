@@ -5,7 +5,7 @@ read mode
 echo "***** input filepath to record or replay *****"
 read binary
 
-LD_PRELOAD=./netlib.so ./($binary)
-./monitor $mode ./($binary)
+LD_PRELOAD=./netlib.so ./$binary
+./monitor $mode ./$binary
 
 
