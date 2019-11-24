@@ -1,19 +1,11 @@
-CC = gcc
-OFLAGS = -o
-LFLAGS = -fPIC -shared -ldl
-IFLAGS = -Iinclude
- 
-netlib.so: netlib.c
-	$(CC) $(OFLAGS) netlib.so netlib.c $(LFLAGS) $(IFLAGS)
+$(CC)= gcc
+$(SFLAGS)= -fPIC -shared
 
-rrnet.o: rrnet.c
-	$(CC) -c $(OFLAGS) rrnet.c -lpthread
+rr_library.so: rrnet.c netlib.c
+	$(CC) $(SFLAGS) rrnet.c netlib.c -ldl -lpthread
 
-monitor.o: monitor.c
-	$(CC) -c $(OFLAGS) monitor.c
-
-monitor: rrnet.o monitor.o
-	$(CC) $(OFLAGS) monitor rrnet.o monitor.o
+monitor: monitor.c rrnet.c
+	$(CC) -o monitor monitor.c rrnet.c -lpthread
 
 clean:
-	rm -rf *.o *.so *.out
+	rm -rf *.o *.swp *.so

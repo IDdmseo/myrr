@@ -3,10 +3,11 @@
 
 int curr_seq;
 int curr_mode;
-int curr_rr_tid;
-int rr_tid_info[2]; // 0 for tid and current total tid, 1 for sleep
+int rr_tid_info[2]; // 0 for tid, 1 for sleep
 struct list_head rr_log_head;
 struct list_head rr_tid_head;
+pthread_cond_t cond[10];
+pthread_mutex_t sync_mutex;
 
 LIST_HEAD(rr_log_head);
 LIST_HEAD(rr_tid_head);
@@ -70,7 +71,7 @@ void init_all_information(int mode)
 	curr_mode = mode;
 
 	for (i = 0;i < 2; i++){
-		rr_tid_info[i] = 0;
+		rr_tid_info[i] = 0; // 0 for total thread, 1 for sleep count
 	}
 
 	for (i = 0;i < 10; i++){
@@ -80,31 +81,28 @@ void init_all_information(int mode)
 	
 }
 	
-
-int rr_tid_alloc(int tid)
+int rr_tid_alloc(int curr_real_tid)
 {
-	struct rr_tid *get;
-	get = (struct rr_tid *)malloc(sizeof(struct rr_tid));
-	get->rtid = pthread_self(); // real thread id in pthread library.
-	get->tid = rr_tid_info[0]; // alloc unique thread_id for rr.
-	list_add_tail(&get->list, &rr_tid_head);
+	struct rr_tid_log *tid_log;
+	tid_log = (struct rr_tid_log *)malloc(sizeof(struct rr_tid_log));
+	tid_log->real_tid = curr_real_tid; // real thread id in pthread library.
+	tid_log->alloc_tid = rr_tid_info[0]; // alloc unique thread_id for rr.
+	list_add_tail(&tid_log->list, &rr_tid_head);
 
 	rr_tid_info[0] += 1;
 
-	return get->tid;
+	return tid_log->alloc_tid;
 }
 
-int find_rr_tid(int tid)
+int find_rr_tid(int curr_real_tid)
 {
-	struct rr_tid *get;
-
-	list_for_each_entry(get, &rr_tid_head, list) {
-		if(tid!=get->rtid)
+	struct rr_tid_log *tid_log;
+	list_for_each_entry(tid_log, &rr_tid_head, list) {
+		if(curr_real_tid != tid_log->real_tid)
 			continue;
-		else if(tid == get->rtid)
-			return get->tid;
-		else if(get == NULL);
-			return 0;
+		else if(tid_log == NULL)
+			return -1;
+		else
+			return tid_log->alloc_tid;
 	}
 }
-

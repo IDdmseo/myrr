@@ -38,9 +38,9 @@ struct rr_log {
 	struct list_head list;
 };
 
-struct rr_tid {
-	int rtid;
-	int tid;
+struct rr_tid_log {
+	int real_tid;
+	int alloc_tid;
 	struct list_head list;
 };
 
@@ -55,11 +55,9 @@ int find_rr_tid(int rtid);
 /* global variables */
 extern int curr_seq;
 extern int curr_mode;
-extern int curr_rr_tid;
 extern int rr_tid_info[2]; // 0 for tid, 1 for sleep
 extern struct list_head rr_log_head;
 extern struct list_head rr_tid_head;
 extern pthread_cond_t cond[10];
 extern pthread_mutex_t sync_mutex;
-
 #endif
