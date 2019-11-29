@@ -17,9 +17,9 @@ pthread_mutex_t sync_mutex;
 
 struct rr_log* rr_make_log(int type, char *data, int size, int sort, struct list_head *list)
 {
+	printf("rr_make_log\n");
 	int key = pthread_self();
 	struct rr_log *log;
-	
 	log = (struct rr_log *)malloc(sizeof(struct rr_log));
 	
 	log->log_type = type;
@@ -61,9 +61,18 @@ void rr_remove_log(struct list_head *list)
 	free(log);	
 }
 
-void init_all_information(int mode)
+void init_all_information(int mode, int status)
 {	
+	struct rr_log *curr_del, *temp_del;
 	int i = 0;
+
+	if(status == RR_FINISHED){
+		list_for_each_entry_safe(curr_del, temp_del, &rr_log_head, list){
+			if(curr_del == NULL && temp_del == NULL)
+				break;
+			rr_remove_log(&rr_log_head);
+		}
+	}
 
 	INIT_LIST_HEAD(&rr_log_head);
 	INIT_LIST_HEAD(&rr_tid_head);
@@ -77,8 +86,7 @@ void init_all_information(int mode)
 	for (i = 0;i < 10; i++){
 		pthread_cond_init(&cond[i], NULL);
 	}
-	pthread_mutex_init(&sync_mutex, NULL);
-	
+	pthread_mutex_init(&sync_mutex, NULL);	
 }
 	
 int rr_tid_alloc(int curr_real_tid)

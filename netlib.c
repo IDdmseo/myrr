@@ -21,14 +21,14 @@ void __attribute__((constructor)) init_hooking()
 void __attribute__((destructor)) finish_hooking()
 {
 	/* this part is just used for debugging library whether hooking was done well or not */
-	fprintf(stdout, "hooking library call destructed\n");
+	fprintf(stderr, "hooking library call destructed\n");
 }
 
 ssize_t send(int sockfd, const void *buf, size_t len, int flags)
 {
 	int ret, curr_rr_tid;
 	struct rr_log *log;
-
+	
 	if(curr_mode == RR_MOD_RECORD) {
 		rr_make_log(RR_LOG_IO, buf, (int)len, SEND, &rr_log_head);
 		curr_seq += 1;

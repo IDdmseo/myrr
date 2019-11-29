@@ -14,69 +14,59 @@ void sig_handler(int signo){
 
 int main(int argc, char *argv[])
 {
-	pid_t parent, child;
-	int child_status, copy_data_size = 0;
-	struct rr_tid_log *get, *set, *next;
-	struct rr_log *log;
-	FILE *fp_log;
-
 	signal(SIGCHLD, sig_handler);
-	
-	if (argc != 3){
-		perror("Usage: ./monitor rr_mode(rc or rp) ./executable_file\n");
-		exit(1);
-	}
+	/* variables */
+	pid_t child, parent;
+	struct rr_log *memory_log, *temp_memory_log;
+	FILE *disk_log;
+	int child_status, child_start = 0;
 
-	if(!strcmp(argv[1], "rc")) {
-		init_all_information(RR_MOD_RECORD);
-		fp_log = fopen("rr_log.log", "wb");
+	/* monitor program logic */
+	if (!strcmp(argv[1], "rc")) {
+		init_all_information(RR_MOD_RECORD, RR_STARTED);
 		parent = fork();
-		if (parent == 0){
+		if(parent == 0){
+			child = getpid();
 			execvp(argv[2], argv+2);
-			child_term = 1;
-		}
-		else if (parent != 0) {
-			while(!child_term) {
-				log = rr_get_log(&rr_log_head);
-				fwrite(log, sizeof(int), 5, fp_log);
-				fwrite(log->copy_data, sizeof(char), log->data_size, fp_log);
+		}else if (parent != 0){
+			// after SUT program finish and is terminated.
+			waitpid(child, &child_status, 0);
+			disk_log = fopen("rr_log.log", "wb");
+			list_for_each_entry_safe(memory_log, temp_memory_log, &rr_log_head, list){
+				fwrite(temp_memory_log, sizeof(struct rr_log), 1, disk_log);
+				fwrite(temp_memory_log->copy_data, sizeof(char), temp_memory_log->data_size, disk_log);
 				rr_remove_log(&rr_log_head);
 			}
 		}
 
-		fclose(fp_log);
-		init_all_information(RR_MOD_DEFAULT);	
+		fclose(disk_log);
+		init_all_information(RR_MOD_RECORD, RR_FINISHED);
 	}
 
 	else if(!strcmp(argv[1], "rp")) {
-		init_all_information(RR_MOD_REPLAY);
-		fp_log = fopen("rr_log.log", "rb");
+		init_all_information(RR_MOD_REPLAY, RR_STARTED);
 		parent = fork();
-		if (parent == 0){
-			child = getpid();
-			execvp(argv[2], argv+2);
-		} else if (child != 0) {
-			while(!feof(fp_log)) {
-				log = (struct rr_log *)malloc(sizeof(struct rr_log));
-				fread(log, sizeof(int), 5, fp_log);
-				fread(log->copy_data, sizeof(char), log->data_size, fp_log); 
-				list_add_tail(&log->list, &rr_log_head);
+		if(parent != 0){
+			disk_log = fopen("rr_log.log", "rb");
+			while(1){
+				if(feof(disk_log))
+					break;
+				memory_log = (struct rr_log *)malloc(sizeof(struct rr_log));
+				memset(memory_log, 0, sizeof(struct rr_log));
+				fread(memory_log, sizeof(struct rr_log), 1, disk_log);
+				if(memory_log->data_size > 0){
+					memory_log->copy_data = (char *)malloc(memory_log->data_size);
+					fread(memory_log->copy_data, sizeof(char), memory_log->data_size, disk_log);
+					list_add_tail(&memory_log->list, &rr_log_head);
+				}
 			}
+			fclose(disk_log);
+		} else if(parent == 0){
+			child = getpid();
+			while(!child_start);
+			execvp(argv[2], argv+2);
 		}
-		
 		waitpid(child, &child_status, 0);
-		fclose(fp_log); 
-		init_all_information(RR_MOD_DEFAULT);
+		init_all_information(RR_MOD_REPLAY, RR_FINISHED);
 	}
-
-	list_for_each_entry_safe(set, next, &rr_tid_head, list){
-		if (set == NULL)
-			break;
-		list_del(&set->list);
-		free(set);
-	}
-
-	free(&rr_tid_head);
-
-	return 0;
-}	
+}

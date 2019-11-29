@@ -17,6 +17,8 @@
 #define RR_MOD_DEFAULT	0
 #define RR_MOD_RECORD	1
 #define RR_MOD_REPLAY	2
+#define RR_STARTED 10
+#define RR_FINISHED 20
 
 /* IO KINDS and SEQ */
 #define SEND	3
@@ -48,7 +50,7 @@ struct rr_tid_log {
 struct rr_log* rr_make_log(int type, char *data, int size, int sort, struct list_head *list);
 struct rr_log* rr_get_log(struct list_head *list);
 void rr_remove_log(struct list_head *list);
-void init_all_information(int mode);
+void init_all_information(int mode, int status);
 int rr_tid_alloc(int tid);
 int find_rr_tid(int rtid);
 
